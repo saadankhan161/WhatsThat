@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as EmailValidator from 'email-validator';
+
 
 export default class LoginForm extends Component {
 
@@ -16,7 +18,42 @@ export default class LoginForm extends Component {
 
         this._onPressButton = this._onPressButton.bind(this)
     }
+    async loginUser(userData) {
+        try {
+          const response = await fetch('http://localhost:3333/api/1.0.0/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify(userData),
+          });
+      
+          if (response.ok) {
+            const jsonResponse = await response.json();
+            console.log('JSON Response:', jsonResponse);
+      
+            if (jsonResponse.token) {
+              await AsyncStorage.setItem('authToken', jsonResponse.token);
+              console.log('Token stored:', jsonResponse.token);
 
+              if (jsonResponse.id) {
+                await AsyncStorage.setItem('userId', jsonResponse.id.toString());
+                console.log('User ID stored:', jsonResponse.id);
+              }
+
+              this.props.navigation.navigate('TabNavigator');
+            } else {
+              this.setState({ error: "Invalid response, no token received" });
+            }
+          } else {
+            this.setState({ error: "Invalid email or password" });
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          this.setState({ error: "Failed to connect to the server" });
+        }
+      }
     _onPressButton(){
         this.setState({submitted: true})
         this.setState({error: ""})
@@ -36,13 +73,15 @@ export default class LoginForm extends Component {
             this.setState({error: "Password isn't strong enough (One upper, one lower, one special, one number, at least 8 characters long)"})
             return;
         }
+        this.loginUser({
+            email: this.state.email,
+            password: this.state.password,
+        });
     }
 
     render(){
         return (
             <View style={styles.container}>
-           
-
                 <View style={styles.formContainer}>
                     <View style={styles.email}>
                         <Text>Email:</Text>
@@ -105,46 +144,48 @@ export default class LoginForm extends Component {
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "light grey"
     },
     formContainer: {
-      width: "80%"
+    width: "80%"
     },
     email: {
-      marginBottom: 5
+    marginBottom: 5
     },
     password: {
-      marginBottom: 10
+    marginBottom: 10
     },
     loginbtn: {
-      marginTop: 10,
-      marginBottom: 10
+    marginTop: 10,
+    marginBottom: 10
     },
     signup: {
-      justifyContent: "center",
-      textDecorationLine: "underline",
-      marginTop: 10
+    justifyContent: "center",
+    textDecorationLine: "underline",
+    marginTop: 10
     },
     button: {
-      backgroundColor: "#2196F3",
-      borderRadius: 5,
-      padding: 10
+    backgroundColor: "#2196F3",
+    borderRadius: 5,
+    padding: 10
     },
     buttonText: {
-      textAlign: "center",
-      color: "white",
-      fontSize: 16,
-      fontWeight: "bold"
+    textAlign: "center",
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold"
     },
     error: {
-      color: "red",
-      fontWeight: "bold",
-      marginTop: 5,
-      marginBottom: 5
-    }
-    });
+    color: "red",
+    fontWeight: "bold",
+    marginTop: 5,
+    marginBottom: 5
+    },
+
+})
     
   
     

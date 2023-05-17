@@ -8,6 +8,8 @@ export default class SignUpForm extends Component {
         super(props);
 
         this.state = {
+            firstName: "",
+            lastName: "",
             email: "",
             password: "",
             confirmPassword: "",
@@ -18,7 +20,27 @@ export default class SignUpForm extends Component {
 
         this._onPressButton = this._onPressButton.bind(this)
     }
+    async addUser(userData) {
+        try {
+            const response = await fetch('http://localhost:3333/api/1.0.0/user', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            this.setState({ modalVisible: true });
+        } catch (error) {
+            console.error('Error while adding user:', error);
+            this.setState({ error: 'Error while adding user. Please try again.' });
+        }
+    }
     _onPressButton(){
         this.setState({submitted: true})
         this.setState({error: ""})
@@ -39,12 +61,12 @@ export default class SignUpForm extends Component {
             return;
         }
 
-        if(this.state.password !== this.state.confirmPassword){
-            this.setState({error: "Passwords do not match"})
-            return;
-        }
-        this.setState({modalVisible: true});
-
+        this.addUser({
+            first_name: this.state.firstName,
+            last_name: this.state.lastName,
+            email: this.state.email,
+            password: this.state.password,
+        });
     }
 
     render(){
@@ -67,7 +89,39 @@ export default class SignUpForm extends Component {
                             }
                         </>
                     </View>
-            
+                   
+                    <View style={styles.name}>
+                        <Text>First Name:</Text>
+                        <TextInput
+                            style={{height: 40, borderWidth: 1, width: "100%"}}
+                            placeholder="Enter first name"
+                            onChangeText={firstName => this.setState({firstName})}
+                            defaultValue={this.state.firstName}
+                        />
+
+                        <>
+                            {this.state.submitted && !this.state.firstName &&
+                                <Text style={styles.error}>*First name is required</Text>
+                            }
+                        </>
+                    </View>
+
+                    <View style={styles.name}>
+                        <Text>Last Name:</Text>
+                        <TextInput
+                            style={{height: 40, borderWidth: 1, width: "100%"}}
+                            placeholder="Enter last name"
+                            onChangeText={lastName => this.setState({lastName})}
+                            defaultValue={this.state.lastName}
+                        />
+
+                        <>
+                            {this.state.submitted && !this.state.lastName &&
+                                <Text style={styles.error}>*Last name is required</Text>
+                            }
+                        </>
+                    </View>
+
                     <View style={styles.password}>
                         <Text>Password:</Text>
                         <TextInput
@@ -141,6 +195,7 @@ container: {
 flex: 1,
 justifyContent: "center",
 alignItems: "center",
+backgroundColor: "light grey"
 },
 formContainer: {
 width: "80%"
@@ -150,6 +205,9 @@ marginBottom: 5
 },
 password: {
 marginBottom: 10
+},
+name: {
+marginBottom: 5
 },
 loginbtn: {
 marginTop: 10,
@@ -177,29 +235,29 @@ fontWeight: "bold",
 marginTop: 5,
 marginBottom: 5
 },
-// Styles for Modal
+// Styles for my Modal
 modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    },
-    modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    },
-    successTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-    },
-    successText: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
-    }
+flex: 1,
+justifyContent: "center",
+alignItems: "center",
+backgroundColor: "rgba(0, 0, 0, 0.5)",
+},
+modalContent: {
+backgroundColor: "white",
+padding: 20,
+borderRadius: 10,
+alignItems: "center",
+justifyContent: "center",
+},
+successTitle: {
+fontSize: 24,
+fontWeight: "bold",
+marginBottom: 10,
+textAlign: "center",
+},
+successText: {
+fontSize: 18,
+marginBottom: 20,
+textAlign: "center",
+}
 });
